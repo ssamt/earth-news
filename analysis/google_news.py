@@ -1,13 +1,25 @@
 from urllib.parse import urljoin
 import requests
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 base_url = 'https://news.google.com/'
 all_sections = ['U.S.', 'World', 'Business', 'Technology', 'Entertainment', 'Sports', 'Science', 'Health']
 
+class Source:
+    def __init__(self, name: str, icon_url: str):
+        self.name = name
+        self.icon_url = icon_url
+
+    def __str__(self):
+        return self.name
+
+    def get_json(self):
+        return {'name': self.name, 'icon_url': self.icon_url}
+
 class Article:
-    def __init__(self, title, url):
+    def __init__(self, source: Source, title: str, url: str):
+        self.source = source
         self.title = title
         self.url = url
 
@@ -15,13 +27,13 @@ class Article:
         return self.title == other.title
 
     def __str__(self):
-        return f'{self.title}: ({self.url})'
+        return f'{str(self.source)}: {self.title}'
 
     def get_json(self):
-        return {'title': self.title, 'url': self.url}
+        return {'source': self.source.get_json(), 'title': self.title, 'url': self.url}
 
 class ArticleCollection:
-    def __init__(self, articles):
+    def __init__(self, articles: list[Article]):
         self.articles = articles
 
     # Mainly for caching purposes
@@ -38,13 +50,13 @@ class ArticleCollection:
     def get_json(self):
         return [article.get_json() for article in self.articles]
 
-    def get_prompt_string(self):
+    def get_prompt_string(self) -> str:
         return '\n'.join([
             f'{i + 1}. {article.title}'
             for i, article in enumerate(self.articles)
         ])
 
-def get_sections_urls(sections):
+def get_sections_urls(sections: list[str]) -> dict[str, str]:
     page = requests.get(base_url)
     soup = BeautifulSoup(page.content, 'html.parser')
     menubar = soup.find(role='menubar')
@@ -52,19 +64,25 @@ def get_sections_urls(sections):
     urls = {section: urljoin(base_url, anchor['href']) for section, anchor in anchors.items()}
     return urls
 
-def get_section_article_collections(url):
+def get_section_article_collections(url: str) -> list[ArticleCollection]:
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
     article_tags = soup.find_all('article')
 
-    def is_article_collection_tag(tag):
+    def is_article_collection_tag(tag: Tag) -> bool:
         child_articles = tag.find_all('article', recursive=False)
         all_articles = tag.find_all('article')
         return len(child_articles) == 1 and len(all_articles) > 1
 
-    def get_article_from_article_tag(tag):
+    def get_article_from_article_tag(tag: Tag) -> Article:
         anchor = tag.find('a', string=True)
-        return Article(title=anchor.text, url=urljoin(url, anchor['href']))
+        source_name_tag = tag.find('div', string=True)
+        source_name = source_name_tag.text
+        source_tag = source_name_tag.parent.parent
+        icon_tag = source_tag.find('img')
+        icon_url = icon_tag['src'].split(' ')[0]
+        return Article(title=anchor.text, url=urljoin(url, anchor['href']),
+                       source=Source(name=source_name, icon_url=icon_url))
 
     article_parent_tags = [tag.parent for tag in article_tags]
     article_collection_tags = [tag for tag in article_parent_tags if is_article_collection_tag(tag)]
@@ -78,7 +96,7 @@ def get_section_article_collections(url):
     ]
     return article_collections
 
-def get_all_article_collections(sections=None):
+def get_all_article_collections(sections: list[str] = None) -> dict[str, list[ArticleCollection]]:
     if sections is None:
         sections = all_sections
     urls = get_sections_urls(sections)

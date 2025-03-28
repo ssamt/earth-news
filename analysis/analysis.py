@@ -37,12 +37,12 @@ class Location:
     def get_json(self):
         return {'lat': self.lat, 'lon': self.lon}
 
-def get_json(response):
-    start_idx = response.text.find('{')
-    end_idx = response.text.rfind('}')
-    return json.loads(response.text[start_idx:end_idx+1])
+def get_json(response: str):
+    start_idx = response.find('{')
+    end_idx = response.rfind('}')
+    return json.loads(response[start_idx:end_idx+1])
 
-def get_location(article_collection: ArticleCollection):
+def get_location(article_collection: ArticleCollection) -> Location:
     query = f'''Given a list of news articles, return a location in longitude and latitude.
 Think step by step, and at the end of the response, return the location in longitude and latitude in JSON format, e.g. {{"lat": 37.7749, "lon": -122.4194}}
 
@@ -52,7 +52,7 @@ Think step by step, and at the end of the response, return the location in longi
         model='gemini-2.0-flash-lite',
         contents=query,
     )
-    answer = get_json(response)
+    answer = get_json(response.text)
     return Location(answer['lat'], answer['lon'])
 
 def get_analysis(article_collection: ArticleCollection):
