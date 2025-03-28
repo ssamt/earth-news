@@ -1,14 +1,25 @@
 import json
-import requests
-from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 from analysis import ArticleCollectionAnalysis
 from google_news import get_all_article_collections
 
+analysis_filename = 'analysis.json'
+
+def save_analysis():
+    article_collections = get_all_article_collections(['Business'])
+    analyses = {}
+    for section in article_collections.keys():
+        analyses[section] = []
+        for article_collection in tqdm(article_collections[section], desc=section):
+            try:
+                analysis = ArticleCollectionAnalysis(article_collection)
+            except Exception as e:
+                print(e)
+                continue
+            analyses[section].append(analysis.get_json())
+    with open(analysis_filename, 'w') as f:
+        json.dump(analyses, f)
+
 if __name__ == '__main__':
-    article_collections = get_all_article_collections(['U.S.'])
-    example = article_collections['U.S.'][0]
-    print(example.articles[0].url)
-    analysis = ArticleCollectionAnalysis(example)
-    with open('analysis.json', 'w') as f:
-        json.dump(analysis.get_json(), f)
+    save_analysis()

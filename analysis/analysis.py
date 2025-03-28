@@ -1,5 +1,6 @@
 import os
 import json
+import time
 
 from dotenv import load_dotenv
 from google import genai
@@ -37,22 +38,36 @@ class Location:
     def get_json(self):
         return {'lat': self.lat, 'lon': self.lon}
 
+def try_until_success(func, wait_secs: float = 1.0, max_tries: int = 10):
+    for i in range(max_tries):
+        try:
+            return func()
+        except:
+            time.sleep(wait_secs)
+    raise Exception('Failed to get response after max tries')
+
+def get_response(prompt: str) -> str:
+    def simple_get_response() -> str:
+        response = client.models.generate_content(
+            model='gemini-2.0-flash-lite',
+            contents=prompt,
+        )
+        return response.text
+    return try_until_success(simple_get_response)
+
 def get_json(response: str):
     start_idx = response.find('{')
     end_idx = response.rfind('}')
     return json.loads(response[start_idx:end_idx+1])
 
 def get_location(article_collection: ArticleCollection) -> Location:
-    query = f'''Given a list of news articles, return a location in longitude and latitude.
+    prompt = f'''Given a list of news articles, return a location in longitude and latitude.
 Think step by step, and at the end of the response, return the location in longitude and latitude in JSON format, e.g. {{"lat": 37.7749, "lon": -122.4194}}
 
 {article_collection.get_prompt_string()}'''
 
-    response = client.models.generate_content(
-        model='gemini-2.0-flash-lite',
-        contents=query,
-    )
-    answer = get_json(response.text)
+    response = get_response(prompt)
+    answer = get_json(response)
     return Location(answer['lat'], answer['lon'])
 
 def get_analysis(article_collection: ArticleCollection):

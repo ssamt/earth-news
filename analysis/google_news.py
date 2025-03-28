@@ -1,5 +1,6 @@
 from urllib.parse import urljoin
 import requests
+from tqdm import tqdm
 
 from bs4 import BeautifulSoup, Tag
 
@@ -30,7 +31,7 @@ class Article:
         return f'{str(self.source)}: {self.title}'
 
     def get_json(self):
-        return {'source': self.source.get_json(), 'title': self.title, 'url': self.url}
+        return {'source': self.source.get_json(), 'title': self.title}
 
 class ArticleCollection:
     def __init__(self, articles: list[Article]):
@@ -86,7 +87,6 @@ def get_section_article_collections(url: str) -> list[ArticleCollection]:
 
     article_parent_tags = [tag.parent for tag in article_tags]
     article_collection_tags = [tag for tag in article_parent_tags if is_article_collection_tag(tag)]
-    print(len(article_collection_tags))
     article_collections = [
         ArticleCollection([
             get_article_from_article_tag(article_tag)
@@ -100,12 +100,8 @@ def get_all_article_collections(sections: list[str] = None) -> dict[str, list[Ar
     if sections is None:
         sections = all_sections
     urls = get_sections_urls(sections)
-    news_collections = {section: get_section_article_collections(url) for section, url in urls.items()}
+    news_collections = {
+        section: get_section_article_collections(url)
+        for section, url in tqdm(urls.items(), desc='Reading Sections')
+    }
     return news_collections
-
-if __name__ == '__main__':
-    all_article_collections = get_all_article_collections()
-    for article_collections in all_article_collections.values():
-        for article_collection in article_collections:
-            print(article_collection)
-            print()
