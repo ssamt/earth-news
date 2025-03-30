@@ -7,7 +7,7 @@ from google_news import get_all_article_collections
 analysis_filename = 'analysis.json'
 
 def save_analysis():
-    article_collections = get_all_article_collections(['Business'])
+    article_collections = get_all_article_collections()
     analyses = {}
     for section in article_collections.keys():
         analyses[section] = []
