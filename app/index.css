@@ -1,0 +1,12 @@
+.circle {
+    /* These properties should be set dynamically */
+    width: auto;
+    height: auto;
+    left: auto;
+    top: auto;
+
+    border: solid 1px black;
+    border-radius: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+}
