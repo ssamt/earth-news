@@ -1,3 +1,7 @@
+body {
+    margin: 0;
+}
+
 .circle {
     /* These properties should be set dynamically */
     width: auto;
