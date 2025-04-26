@@ -4,7 +4,7 @@ from tqdm import tqdm
 from analysis import ArticleCollectionAnalysis
 from google_news import get_all_article_collections
 
-analysis_filename = 'app/analysis.json'
+analysis_filename = 'dynamic/analysis.json'
 
 def save_analysis():
     article_collections = get_all_article_collections()
