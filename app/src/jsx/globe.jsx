@@ -1,32 +1,36 @@
 import * as R from 'ramda'
 import Globe from 'react-globe.gl'
 
-function isValidAnalysis(d) {
-    const analysis = d.analysis
-    const location = analysis.location
-    if (location.lat === null || location.lon === null) return false
-    if (analysis.importance === null) return false
-    if (location.lat === 0 && location.lon === 0) return false // likely not a real location
-    return true
+function categoryToColor(category) {
+    const colors = {
+        'U.S.': 'blue',
+        'World': 'red',
+        'Business': 'green',
+        'Technology': 'orange',
+        'Entertainment': 'yellow',
+        'Sports': 'cyan',
+        'Science': 'purple',
+        'Health': 'pink',
+    }
+    if (colors.hasOwnProperty(category)) return colors[category]
+    return 'gray'
 }
 
-function toLabelData(d) {
-    const location = d.analysis.location
-    const importance = d.analysis.importance
+function toLabelData(item) {
+    const location = item.analysis.location
+    const importance = item.analysis.importance
     return {
         lat: location.lat,
         lng: location.lon,
         text: 'test',
         size: 1,
         radius: 0.1*Math.pow(1.5, importance),
-
+        color: categoryToColor(item.category),
     }
 }
 
 export function GlobeScreen({analysis}) {
-    const fullData = R.flatten(R.values(analysis))
-    const data = R.filter(isValidAnalysis, fullData)
-    const labelData = R.map(toLabelData, data)
+    const labelData = R.map(toLabelData, analysis)
 
     return <Globe
         globeImageUrl='//cdn.jsdelivr.net/npm/three-globe/example/img/earth-night.jpg'
@@ -35,5 +39,6 @@ export function GlobeScreen({analysis}) {
         labelsData={labelData}
         labelSize={'size'}
         labelDotRadius={'radius'}
+        labelColor={'color'}
     />
 }
