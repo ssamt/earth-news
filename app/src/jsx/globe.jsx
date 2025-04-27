@@ -33,8 +33,8 @@ export function GlobeScreen({analysis}) {
     const labelData = R.map(toLabelData, analysis)
 
     return <Globe
-        globeImageUrl='//cdn.jsdelivr.net/npm/three-globe/example/img/earth-night.jpg'
-        backgroundImageUrl='//cdn.jsdelivr.net/npm/three-globe/example/img/night-sky.png'
+        globeImageUrl='./images/earth-night.jpg'
+        backgroundImageUrl='./images/night-sky.png'
 
         labelsData={labelData}
         labelSize={'size'}

@@ -27,7 +27,7 @@ export function App() {
     const [analysis, setAnalysis] = useState([])
 
     useEffect(() => {
-        const file_url = './analysis.json'
+        const file_url = './dynamic/analysis.json'
         fetch(file_url)
             .then(response => response.json())
             .then(preprocessAnalysisData)

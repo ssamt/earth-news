@@ -6,6 +6,9 @@ app = Flask(__name__, static_folder='../app/build/static')
 def index():
     return send_file('../app/build/index.html')
 
-@app.route("/<path:path>")
+@app.route("/dynamic/<path:path>")
 def send_dynamic_files(path):
     return send_from_directory('../dynamic', path)
+@app.route("/<path:path>")
+def send_static_files(path):
+    return send_from_directory('../app/build', path)
