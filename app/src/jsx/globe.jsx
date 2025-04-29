@@ -1,6 +1,9 @@
 import * as R from 'ramda'
 import Globe from 'react-globe.gl'
 
+import {arrangeCircles} from './circle_arrangement'
+import {PointOnSphere, CircleOnSphere} from './spherical_geometry'
+
 function categoryToColor(category) {
     const colors = {
         'U.S.': 'blue',
@@ -29,14 +32,32 @@ function toLabelData(item) {
     }
 }
 
+function arrangeLabelDataPositions(labelData) {
+    function labelToCircle(label) {
+        const center = PointOnSphere.fromLatLon(label.lat, label.lng)
+        const radius = label.radius * Math.PI / 180
+        return new CircleOnSphere(center, radius)
+    }
+    const circles = labelData.map(labelToCircle)
+    const arranged_circles = arrangeCircles(circles)
+    const arrangedLabelData = structuredClone(labelData)
+    for(let i = 0; i < arranged_circles.length; i++) {
+        const { lat, lon } = arranged_circles[i].center.toLatLon()
+        arrangedLabelData[i].lat = lat
+        arrangedLabelData[i].lng = lon
+    }
+    return arrangedLabelData
+}
+
 export function GlobeScreen({analysis}) {
     const labelData = R.map(toLabelData, analysis)
+    const arrangedLabelData = arrangeLabelDataPositions(labelData)
 
     return <Globe
         globeImageUrl='./images/earth-night.jpg'
         backgroundImageUrl='./images/night-sky.png'
 
-        labelsData={labelData}
+        labelsData={arrangedLabelData}
         labelSize={'size'}
         labelDotRadius={'radius'}
         labelColor={'color'}
