@@ -1,33 +1,40 @@
 import * as R from 'ramda'
 import Globe from 'react-globe.gl'
 
+import ReactDOMServer from 'react-dom/server'
+
 import {arrangeCircles} from './circle_arrangement'
 import {PointOnSphere, CircleOnSphere} from './spherical_geometry'
 
 function categoryToColor(category) {
+    const alpha = 0.5
     const colors = {
-        'U.S.': 'blue',
-        'World': 'red',
-        'Business': 'green',
-        'Technology': 'orange',
-        'Entertainment': 'yellow',
-        'Sports': 'cyan',
-        'Science': 'purple',
-        'Health': 'pink',
+        'U.S.': `rgba(256, 0, 0, ${alpha})`,
+        'World': `rgba(0, 256, 0, ${alpha})`,
+        'Business': `rgba(128, 128, 0, ${alpha})`,
+        'Technology': `rgba(0, 0, 256, ${alpha})`,
+        'Entertainment': `rgba(128, 0, 128, ${alpha})`,
+        'Sports': `rgba(128, 256, 128, ${alpha})`,
+        'Science': `rgba(0, 128, 128, ${alpha})`,
+        'Health': `rgba(256, 128, 128, ${alpha})`,
     }
     if (colors.hasOwnProperty(category)) return colors[category]
     return 'gray'
 }
 
 function toLabelData(item) {
+    const articleTags = item.articles.map(a => <span>{a.source.name}: {a.title}</span>)
+    const labelTag = R.intersperse(<br/>, articleTags)
     const location = item.analysis.location
     const importance = item.analysis.importance
+    const radius = 0.1*Math.pow(1.5, importance)
     return {
         lat: location.lat,
         lng: location.lon,
-        text: 'test',
-        size: 1,
-        radius: 0.1*Math.pow(1.5, importance),
+        label: ReactDOMServer.renderToStaticMarkup(labelTag),
+        text: 'text',
+        size: 0.5 * radius,
+        radius: radius,
         color: categoryToColor(item.category),
     }
 }
@@ -54,10 +61,11 @@ export function GlobeScreen({analysis}) {
     const arrangedLabelData = arrangeLabelDataPositions(labelData)
 
     return <Globe
-        globeImageUrl='./images/earth-night.jpg'
+        globeImageUrl='./images/earth-blue-marble.jpg'
         backgroundImageUrl='./images/night-sky.png'
 
         labelsData={arrangedLabelData}
+        labelLabel={'label'}
         labelSize={'size'}
         labelDotRadius={'radius'}
         labelColor={'color'}
