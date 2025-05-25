@@ -60,12 +60,5 @@ export function GlobeScreen({analysis, setSelectedArticles}) {
         onLabelClick={ (label, _event, _coords) => {
             setSelectedArticles(label.articleCollection.articles)
         }}
-
-        ringsData={arrangedLabelData}
-        ringAltitude={0}
-        ringColor={() => 'white'}
-        ringMaxRadius={'radius'}
-        ringPropagationSpeed={0}
-        ringRepeatPeriod={0}
     />
 }
