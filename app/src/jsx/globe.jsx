@@ -36,6 +36,7 @@ function toLabelData(item) {
         size: 0.5 * radius,
         radius: radius,
         color: categoryToColor(item.category),
+        articleCollection: item,
     }
 }
 
@@ -56,7 +57,7 @@ function arrangeLabelDataPositions(labelData) {
     return arrangedLabelData
 }
 
-export function GlobeScreen({analysis}) {
+export function GlobeScreen({analysis, setSelectedArticles}) {
     const labelData = R.map(toLabelData, analysis)
     const arrangedLabelData = arrangeLabelDataPositions(labelData)
 
@@ -69,5 +70,8 @@ export function GlobeScreen({analysis}) {
         labelSize={'size'}
         labelDotRadius={'radius'}
         labelColor={'color'}
+        onLabelClick={ (label, _event, _coords) => {
+            setSelectedArticles(label.articleCollection.articles)
+        }}
     />
 }

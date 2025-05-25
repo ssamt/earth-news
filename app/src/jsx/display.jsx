@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react'
 
-import { GlobeScreen } from './globe'
+import {GlobeScreen} from './globe'
+import {RightSidebar} from './sidebar'
 
 function isValidAnalysis(item) {
     const analysis = item.analysis
@@ -24,6 +25,7 @@ function preprocessAnalysisData(analysis)  {
 }
 
 export function App() {
+    const [selectedArticles, setSelectedArticles] = useState([])
     const [analysis, setAnalysis] = useState([])
 
     useEffect(() => {
@@ -36,6 +38,7 @@ export function App() {
     }, [])
 
     return <div>
-        <GlobeScreen analysis={analysis}/>
+        <GlobeScreen analysis={analysis} setSelectedArticles={setSelectedArticles}/>
+        <RightSidebar selectedArticles={selectedArticles}/>
     </div>
 }
