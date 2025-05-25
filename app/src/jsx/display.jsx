@@ -1,7 +1,9 @@
-import {useEffect, useState} from 'react'
+import * as R from 'ramda'
+
+import {useEffect, useMemo, useState} from 'react'
 
 import {GlobeScreen} from './globe'
-import {RightSidebar} from './sidebar'
+import {LeftSidebar, RightSidebar} from './sidebar'
 
 function isValidAnalysis(item) {
     const analysis = item.analysis
@@ -24,21 +26,45 @@ function preprocessAnalysisData(analysis)  {
     return result
 }
 
+function searchQueryArticle(article, query) {
+    const lowerQuery = query.toLowerCase()
+    return article.title.toLowerCase().includes(lowerQuery) ||
+           article.source.name.toLowerCase().includes(lowerQuery)
+}
+function searchQueryArticleCollection(articleCollection, query) {
+    return articleCollection.articles.some(article => searchQueryArticle(article, query))
+}
+
 export function App() {
-    const [selectedArticles, setSelectedArticles] = useState([])
     const [analysis, setAnalysis] = useState([])
+    const [searchQuery, setSearchQuery] = useState('')
+    const [showCategories, setShowCategories] = useState({})
+    const [selectedArticles, setSelectedArticles] = useState([])
+
+    const filteredAnalysis = useMemo(() => {
+        const searchFiltered = analysis.filter(articleCollection => searchQueryArticleCollection(articleCollection, searchQuery))
+        const categoryFiltered =  searchFiltered.filter(articleCollection => showCategories[articleCollection.category])
+        return categoryFiltered
+    }, [analysis, searchQuery, showCategories])
 
     useEffect(() => {
         const file_url = './dynamic/analysis.json'
         fetch(file_url)
             .then(response => response.json())
             .then(preprocessAnalysisData)
-            .then(data => setAnalysis(data))
+            .then(data => {
+                setAnalysis(data)
+                const categories = R.uniq(data.map(item => item.category))
+                const initialShowCategories = R.zipObj(categories, Array(categories.length).fill(true))
+                setShowCategories(initialShowCategories)
+            })
             .catch(error => console.error('Error fetching analysis:', error))
     }, [])
 
     return <div>
-        <GlobeScreen analysis={analysis} setSelectedArticles={setSelectedArticles}/>
+        <GlobeScreen analysis={filteredAnalysis} setSelectedArticles={setSelectedArticles}/>
+        <LeftSidebar searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+                     showCategories={showCategories} setShowCategories={setShowCategories}/>
         <RightSidebar selectedArticles={selectedArticles}/>
     </div>
 }
