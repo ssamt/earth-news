@@ -18,10 +18,12 @@ export function LeftSidebar({searchQuery, setSearchQuery, showCategories, setSho
         const color = categoryToColor(category)
         const style = {backgroundColor: color, width: '20px', height: '20px', display: 'inline-block' }
         return <div key={category}>
-            <div style={style}></div>
-            {category}
             <input type='checkbox' checked={showCategories[category]}
-                onChange={e => setShowCategories(R.assoc(category, e.target.checked))}/>
+                   onChange={e => setShowCategories(R.assoc(category, e.target.checked))}/>
+            {' '}
+            <div style={style}></div>
+            {' '}
+            <span>{category}</span>
         </div>
     }
 
@@ -38,8 +40,10 @@ export function RightSidebar({selectedArticles}) {
         const {source, title} = article
         const {name, icon_url} = source
         return <p>
-            <img src={icon_url} alt={name} style={{width: '20px', height: '20px'}} />
-            <strong>{name}</strong>: {title}
+            <img src={icon_url} alt={name} style={{width: '20px', height: '20px'}} /> {' '}
+            <span>
+                <strong>{name}</strong>: {title}
+            </span>
         </p>
     }
 

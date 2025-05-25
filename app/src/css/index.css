@@ -2,25 +2,19 @@ body {
     margin: 0;
 }
 
-.circle {
-    /* These properties should be set dynamically */
-    width: auto;
-    height: auto;
-    left: auto;
-    top: auto;
+p {
+    margin-top: 0;
+}
 
-    border: solid 1px black;
-    border-radius: 50%;
-    position: absolute;
-    transform: translate(-50%, -50%);
+span {
+    color: white;
 }
 
 .sidebar {
     position: fixed;
     width: 300px;
     height: 100%;
-    background-color: #f0f0f0;
-    border-right: solid 1px #ccc;
+    background-color: rgba(0, 0, 0, 0);
     padding: 20px;
 }
 
