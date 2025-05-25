@@ -1,14 +1,21 @@
+import convert from 'color-convert'
+
 export function categoryToColor(category) {
-    const alpha = 0.5
+    // string should be in RGBA format, but we use HSL to generate colors
+    const s = 60, l = 45, a = 0.8
+    function colorString(h) {
+        const [r, g, b] = convert.hsl.rgb([h, s, l])
+        return `rgba(${r}, ${g}, ${b}, ${a})`
+    }
     const colors = {
-        'U.S.': `rgba(256, 0, 0, ${alpha})`,
-        'World': `rgba(0, 256, 0, ${alpha})`,
-        'Business': `rgba(128, 128, 0, ${alpha})`,
-        'Technology': `rgba(0, 0, 256, ${alpha})`,
-        'Entertainment': `rgba(128, 0, 128, ${alpha})`,
-        'Sports': `rgba(128, 256, 128, ${alpha})`,
-        'Science': `rgba(0, 128, 128, ${alpha})`,
-        'Health': `rgba(256, 128, 128, ${alpha})`,
+        'U.S.': colorString(0),
+        'World': colorString(125),
+        'Business': colorString(60),
+        'Technology': colorString(230),
+        'Entertainment': colorString(35),
+        'Sports': colorString(275),
+        'Science': colorString(175),
+        'Health': colorString(320),
     }
     if (colors.hasOwnProperty(category)) return colors[category]
     return 'gray'
