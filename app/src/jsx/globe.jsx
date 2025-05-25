@@ -1,6 +1,7 @@
 import * as R from 'ramda'
 import Globe from 'react-globe.gl'
 
+import {useMemo} from 'react'
 import ReactDOMServer from 'react-dom/server'
 
 import {arrangeCircles} from './circle_arrangement'
@@ -58,8 +59,8 @@ function arrangeLabelDataPositions(labelData) {
 }
 
 export function GlobeScreen({analysis, setSelectedArticles}) {
-    const labelData = R.map(toLabelData, analysis)
-    const arrangedLabelData = arrangeLabelDataPositions(labelData)
+    const labelData =useMemo(() => R.map(toLabelData, analysis), [analysis])
+    const arrangedLabelData = useMemo(() => arrangeLabelDataPositions(labelData), [labelData])
 
     return <Globe
         globeImageUrl='./images/earth-blue-marble.jpg'
@@ -70,6 +71,7 @@ export function GlobeScreen({analysis, setSelectedArticles}) {
         labelSize={'size'}
         labelDotRadius={'radius'}
         labelColor={'color'}
+        labelsTransitionDuration={0}
         onLabelClick={ (label, _event, _coords) => {
             setSelectedArticles(label.articleCollection.articles)
         }}
