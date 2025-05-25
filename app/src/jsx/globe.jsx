@@ -34,7 +34,7 @@ function toLabelData(item) {
         lng: location.lon,
         label: ReactDOMServer.renderToStaticMarkup(labelTag),
         text: 'text',
-        size: 0.5 * radius,
+        size: 0,
         radius: radius,
         color: categoryToColor(item.category),
         articleCollection: item,
