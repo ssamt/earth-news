@@ -195,7 +195,7 @@ export class PointOnSphere {
     }
 
     angleBetween(point) {
-        const cos_angle = this.p.dotProduct(point.p)
+        const cos_angle = R.clamp(-1, 1, this.p.dotProduct(point.p))
         return Math.acos(cos_angle)
     }
 
