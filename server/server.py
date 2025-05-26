@@ -12,3 +12,6 @@ def send_dynamic_files(path):
 @app.route("/<path:path>")
 def send_static_files(path):
     return send_from_directory('../app/build', path)
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)

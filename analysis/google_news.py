@@ -1,14 +1,26 @@
-from urllib.parse import urljoin
-import requests
+from urllib.parse import urlencode
 from tqdm import tqdm
+import feedparser
+from bs4 import BeautifulSoup
+import re
 
-from bs4 import BeautifulSoup, Tag
-
-base_url = 'https://news.google.com/'
-all_sections = ['U.S.', 'World', 'Business', 'Technology', 'Entertainment', 'Sports', 'Science', 'Health']
+TOPIC_URLS = {
+    "World": "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtVnVHZ0pWVXlnQVAB",
+    "Business": "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB",
+    "Technology": "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtVnVHZ0pWVXlnQVAB",
+    "Entertainment": "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNREpxYW5RU0FtVnVHZ0pWVXlnQVAB",
+    "Sports": "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp1ZEdvU0FtVnVHZ0pWVXlnQVAB",
+    "Science": "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp0Y1RjU0FtVnVHZ0pWVXlnQVAB",
+    "Health": "https://news.google.com/rss/topics/CAAqIQgKIhtDQkFTRGdvSUwyMHZNR3QwTlRFU0FtVnVLQUFQAQ"
+}
+SUPPORTED_LOCALES: dict[str, dict[str, str]] = {
+    "US_en": {"hl": "en-US", "gl": "US", "ceid": "US:en"},
+    "KR_ko": {"hl": "ko",    "gl": "KR", "ceid": "KR:ko"},
+}
+DEFAULT_SECTIONS = list(TOPIC_URLS.keys())
 
 class Source:
-    def __init__(self, name: str, icon_url: str):
+    def __init__(self, name: str, icon_url: str = ""):
         self.name = name
         self.icon_url = icon_url
 
@@ -32,6 +44,9 @@ class Article:
 
     def get_json(self):
         return {'source': self.source.get_json(), 'title': self.title}
+    
+    def get_clean_title(self) -> str:
+        return re.sub(r'\s*-\s*[^-]+$', '', self.title).strip()
 
 class ArticleCollection:
     def __init__(self, articles: list[Article]):
@@ -50,58 +65,67 @@ class ArticleCollection:
 
     def get_json(self):
         return [article.get_json() for article in self.articles]
-
+    
+    
     def get_prompt_string(self) -> str:
         return '\n'.join([
-            f'{i + 1}. {article.title}'
+            f'{i + 1}. {article.get_clean_title()}'
             for i, article in enumerate(self.articles)
         ])
 
-def get_sections_urls(sections: list[str]) -> dict[str, str]:
-    page = requests.get(base_url)
-    soup = BeautifulSoup(page.content, 'html.parser')
-    menubar = soup.find(role='menubar')
-    anchors = {section: menubar.find(attrs={'aria-label': section}) for section in sections}
-    urls = {section: urljoin(base_url, anchor['href']) for section, anchor in anchors.items()}
-    return urls
+def build_rss_url(base_url: str, locale: dict) -> str:
+    return base_url + "?" + urlencode(locale)
 
-def get_section_article_collections(url: str) -> list[ArticleCollection]:
-    page = requests.get(url)
-    soup = BeautifulSoup(page.content, 'html.parser')
-    article_tags = soup.find_all('article')
-
-    def is_article_collection_tag(tag: Tag) -> bool:
-        child_articles = tag.find_all('article', recursive=False)
-        all_articles = tag.find_all('article')
-        return len(child_articles) == 1 and len(all_articles) > 1
-
-    def get_article_from_article_tag(tag: Tag) -> Article:
-        anchor = tag.find('a', string=True)
-        source_name_tag = tag.find('div', string=True)
-        source_name = source_name_tag.text
-        source_tag = source_name_tag.parent.parent
-        icon_tag = source_tag.find('img')
-        icon_url = icon_tag['src'].split(' ')[0]
-        return Article(title=anchor.text, url=urljoin(url, anchor['href']),
-                       source=Source(name=source_name, icon_url=icon_url))
-
-    article_parent_tags = [tag.parent for tag in article_tags]
-    article_collection_tags = [tag for tag in article_parent_tags if is_article_collection_tag(tag)]
-    article_collections = [
-        ArticleCollection([
-            get_article_from_article_tag(article_tag)
-            for article_tag in article_collection_tag.find_all('article')
-        ])
-        for article_collection_tag in article_collection_tags
-    ]
-    return article_collections
-
-def get_all_article_collections(sections: list[str] = None) -> dict[str, list[ArticleCollection]]:
-    if sections is None:
-        sections = all_sections
-    urls = get_sections_urls(sections)
-    news_collections = {
-        section: get_section_article_collections(url)
-        for section, url in tqdm(urls.items(), desc='Reading Sections')
+def get_topic_rss_urls_by_locale(locale_key: str) -> dict[str, str]:
+    locale = SUPPORTED_LOCALES[locale_key]
+    return {
+        section: build_rss_url(url, locale)
+        for section, url in TOPIC_URLS.items()
     }
-    return news_collections
+
+def split_articles(articles: list[Article], chunk_size: int = 10) -> list[ArticleCollection]:
+    return [
+        ArticleCollection(articles[i:i + chunk_size])
+        for i in range(0, len(articles), chunk_size)
+    ]
+
+def parse_rss(url: str, chunk_size: int = 3) -> list[ArticleCollection]:
+    feed = feedparser.parse(url, request_headers={
+        "User-Agent": "Mozilla/5.0"
+    })
+
+    articles = []
+    for entry in feed.entries:
+        title = BeautifulSoup(entry.title, "html.parser").get_text().strip()
+        link = entry.link
+        source_title = entry.get("source", {}).get("title", "Unknown")
+        source = Source(name=source_title, icon_url="")
+        articles.append(Article(source=source, title=title, url=link))
+
+    return split_articles(articles, chunk_size)
+
+
+def get_country_collections(locale_key: str) -> dict[str, list[ArticleCollection]]:
+    topic_urls = get_topic_rss_urls_by_locale(locale_key)
+    return {
+        section: parse_rss(url)
+        for section, url in tqdm(topic_urls.items(), desc=f"[{locale_key}] Reading Sections")
+    }
+
+def get_all_article_collections_merged(sections: list[str] | None = None, locales:  list[str] | None = None) -> dict[str, list[ArticleCollection]]:
+    if sections is None:
+        sections = DEFAULT_SECTIONS
+    if locales is None:
+        locales = list(SUPPORTED_LOCALES.keys())
+
+    merged: dict[str, list[ArticleCollection]] = {sec: [] for sec in sections}
+
+    for loc in locales:
+        try:
+            sec_dict = get_country_collections(loc)
+            for sec, ac_list in sec_dict.items():
+                merged[sec].extend(ac_list)
+        except Exception as e:
+            print(f"[{loc}]: {e}")
+
+    return merged

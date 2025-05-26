@@ -1,13 +1,15 @@
 import json
 from tqdm import tqdm
-
+import os
 from analysis import ArticleCollectionAnalysis
-from google_news import get_all_article_collections
+from google_news import get_all_article_collections_merged
 
 analysis_filename = 'dynamic/analysis.json'
 
 def save_analysis():
-    article_collections = get_all_article_collections()
+    os.makedirs(os.path.dirname(analysis_filename), exist_ok=True) #Create directory if it doesn't exist
+
+    article_collections = get_all_article_collections_merged()
     analyses = {}
     for section in article_collections.keys():
         analyses[section] = []
