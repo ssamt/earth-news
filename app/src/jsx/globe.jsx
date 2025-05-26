@@ -57,6 +57,7 @@ export function GlobeScreen({analysis, setSelectedArticles}) {
         labelDotRadius={'radius'}
         labelColor={'color'}
         labelsTransitionDuration={0}
+        labelAltitude={0.0025}
         onLabelClick={ (label, _event, _coords) => {
             setSelectedArticles(label.articleCollection.articles)
         }}
