@@ -10,19 +10,33 @@ span {
     color: white;
 }
 
+.right {
+    float: right;
+}
+
 .sidebar {
     position: fixed;
-    width: 300px;
     background-color: rgba(0, 0, 0, 0);
     padding: 20px;
 }
 
-.left-sidebar {
+.top-left-sidebar {
     top: 0;
     left: 0;
+    width: 300px;
 }
-
-.right-sidebar {
+.top-right-sidebar {
     top: 0;
     right: 0;
+    width: 300px;
+}
+.bottom-left-sidebar {
+    bottom: 0;
+    left: 0;
+    width: 600px;
+}
+.bottom-right-sidebar {
+    bottom: 0;
+    right: 0;
+    width: 600px;
 }

@@ -4,7 +4,7 @@ import {useState} from 'react'
 
 import {categoryToColor} from './color'
 
-export function LeftSidebar({searchQuery, setSearchQuery, showCategories, setShowCategories}) {
+export function TopLeftSidebar({searchQuery, setSearchQuery, showCategories, setShowCategories}) {
     const [searchQueryInput, setsearchQueryInput] = useState(searchQuery)
 
     function handleKeyUp(event) {
@@ -27,7 +27,7 @@ export function LeftSidebar({searchQuery, setSearchQuery, showCategories, setSho
         </div>
     }
 
-    return <div className={'sidebar left-sidebar'}>
+    return <div className={'sidebar top-left-sidebar'}>
         <input type={'text'} value={searchQueryInput} onChange={e => setsearchQueryInput(e.target.value)}
             onKeyUp={handleKeyUp} placeholder={'Search + Enter'}/><br/>
         <br/>
@@ -35,7 +35,7 @@ export function LeftSidebar({searchQuery, setSearchQuery, showCategories, setSho
     </div>
 }
 
-export function RightSidebar({selectedArticles}) {
+export function TopRightSidebar({selectedArticles}) {
     function googleSearchUrl(searchText) {
         const query = searchText.split(' ').join('+')
         return `https://www.google.com/search?q=${query}`
@@ -54,7 +54,16 @@ export function RightSidebar({selectedArticles}) {
         </p>
     }
 
-    return <div className='sidebar right-sidebar'>
+    return <div className='sidebar top-right-sidebar'>
         {selectedArticles.map(articleToTag)}
+    </div>
+}
+
+export function BottomRightSidebar({time}) {
+    const date = new Date(time)
+    const timeString = date.toLocaleString()
+
+    return <div className='sidebar bottom-right-sidebar'>
+        <span className={'right'}>Last updated: {timeString}</span>
     </div>
 }

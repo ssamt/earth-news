@@ -1,12 +1,14 @@
 import json
+import datetime
 from tqdm import tqdm
 
 from analysis import ArticleCollectionAnalysis
 from google_news import get_all_article_collections
 
-analysis_filename = 'dynamic/analysis.json'
+analysis_filename = '../dynamic/analysis.json'
 
 def save_analysis():
+    time = datetime.datetime.now().isoformat()
     article_collections = get_all_article_collections()
     analyses = {}
     for section in article_collections.keys():
@@ -19,7 +21,7 @@ def save_analysis():
                 continue
             analyses[section].append(analysis.get_json())
     with open(analysis_filename, 'w') as f:
-        json.dump(analyses, f)
+        json.dump({'analyses': analyses, 'time': time}, f)
 
 if __name__ == '__main__':
     save_analysis()

@@ -3,7 +3,7 @@ import * as R from 'ramda'
 import {useEffect, useMemo, useState} from 'react'
 
 import {GlobeScreen} from './globe'
-import {LeftSidebar, RightSidebar} from './sidebar'
+import {TopLeftSidebar, TopRightSidebar, BottomRightSidebar} from './sidebar'
 
 function isValidAnalysis(item) {
     const analysis = item.analysis
@@ -37,6 +37,7 @@ function searchQueryArticleCollection(articleCollection, query) {
 
 export function App() {
     const [analysis, setAnalysis] = useState([])
+    const [time, setTime] = useState(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [showCategories, setShowCategories] = useState({})
     const [selectedArticles, setSelectedArticles] = useState([])
@@ -51,10 +52,12 @@ export function App() {
         const file_url = './dynamic/analysis.json'
         fetch(file_url)
             .then(response => response.json())
-            .then(preprocessAnalysisData)
-            .then(data => {
-                setAnalysis(data)
-                const categories = R.uniq(data.map(item => item.category))
+            .then(json => {
+                const analyses = preprocessAnalysisData(json['analyses'])
+                const time = json['time']
+                setTime(time)
+                setAnalysis(analyses)
+                const categories = R.uniq(analyses.map(item => item.category))
                 const initialShowCategories = R.zipObj(categories, Array(categories.length).fill(true))
                 setShowCategories(initialShowCategories)
             })
@@ -63,8 +66,9 @@ export function App() {
 
     return <div>
         <GlobeScreen analysis={filteredAnalysis} setSelectedArticles={setSelectedArticles}/>
-        <LeftSidebar searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+        <TopLeftSidebar searchQuery={searchQuery} setSearchQuery={setSearchQuery}
                      showCategories={showCategories} setShowCategories={setShowCategories}/>
-        <RightSidebar selectedArticles={selectedArticles}/>
+        <TopRightSidebar selectedArticles={selectedArticles}/>
+        <BottomRightSidebar time={time}/>
     </div>
 }
