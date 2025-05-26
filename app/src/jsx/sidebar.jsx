@@ -46,7 +46,7 @@ export function TopRightSidebar({selectedArticles}) {
         const {name, icon_url} = source
         return <p>
             <a href={googleSearchUrl(`${source.name} ${title}`)} target={'_blank'} rel='noreferrer'>
-                <img src={icon_url} alt={name} style={{width:'20px', height:'20px'}}/> {' '}
+                <img src={icon_url} style={{width:'20px', height:'20px'}} alt={''}/> {' '}
                 <span>
                     <strong>{name}</strong>: {title}
                 </span>
