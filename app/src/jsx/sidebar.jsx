@@ -36,14 +36,21 @@ export function LeftSidebar({searchQuery, setSearchQuery, showCategories, setSho
 }
 
 export function RightSidebar({selectedArticles}) {
+    function googleSearchUrl(searchText) {
+        const query = searchText.split(' ').join('+')
+        return `https://www.google.com/search?q=${query}`
+    }
+
     function articleToTag(article) {
         const {source, title} = article
         const {name, icon_url} = source
         return <p>
-            <img src={icon_url} alt={name} style={{width: '20px', height: '20px'}} /> {' '}
-            <span>
-                <strong>{name}</strong>: {title}
-            </span>
+            <a href={googleSearchUrl(`${source.name} ${title}`)} target={'_blank'} rel='noreferrer'>
+                <img src={icon_url} alt={name} style={{width:'20px', height:'20px'}}/> {' '}
+                <span>
+                    <strong>{name}</strong>: {title}
+                </span>
+            </a>
         </p>
     }
 

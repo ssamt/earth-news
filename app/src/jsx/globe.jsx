@@ -44,7 +44,7 @@ function arrangeLabelDataPositions(labelData) {
 }
 
 export function GlobeScreen({analysis, setSelectedArticles}) {
-    const labelData =useMemo(() => R.map(toLabelData, analysis), [analysis])
+    const labelData = useMemo(() => R.map(toLabelData, analysis), [analysis])
     const arrangedLabelData = useMemo(() => arrangeLabelDataPositions(labelData), [labelData])
 
     return <Globe
