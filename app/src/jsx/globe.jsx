@@ -8,7 +8,7 @@ import {arrangeCircles} from './circle_arrangement'
 import {PointOnSphere, CircleOnSphere} from './spherical_geometry'
 import {categoryToColor} from './color'
 
-function toLabelData(item) {
+function toPointData(item) {
     const articleTags = item.articles.map(a => <span>{a.source.name}: {a.title}</span>)
     const labelTag = R.intersperse(<br/>, articleTags)
     const location = item.analysis.location
@@ -17,49 +17,46 @@ function toLabelData(item) {
     return {
         lat: location.lat,
         lng: location.lon,
-        label: ReactDOMServer.renderToStaticMarkup(labelTag),
-        text: 'text',
-        size: 0,
+        name: ReactDOMServer.renderToStaticMarkup(labelTag),
         radius: radius,
         color: categoryToColor(item.category),
         articleCollection: item,
     }
 }
 
-function arrangeLabelDataPositions(labelData) {
-    function labelToCircle(label) {
-        const center = PointOnSphere.fromLatLon(label.lat, label.lng)
-        const radius = label.radius * Math.PI / 180
+function arrangePointDataPositions(pointData) {
+    function pointToCircle(point) {
+        const center = PointOnSphere.fromLatLon(point.lat, point.lng)
+        const radius = point.radius * Math.PI / 180
         return new CircleOnSphere(center, radius)
     }
-    const circles = labelData.map(labelToCircle)
+    const circles = pointData.map(pointToCircle)
     const arranged_circles = arrangeCircles(circles)
-    const arrangedLabelData = structuredClone(labelData)
+    const arrangedPointData = structuredClone(pointData)
     for(let i = 0; i < arranged_circles.length; i++) {
         const { lat, lon } = arranged_circles[i].center.toLatLon()
-        arrangedLabelData[i].lat = lat
-        arrangedLabelData[i].lng = lon
+        arrangedPointData[i].lat = lat
+        arrangedPointData[i].lng = lon
     }
-    return arrangedLabelData
+    return arrangedPointData
 }
 
 export function GlobeScreen({analysis, setSelectedArticles}) {
-    const labelData = useMemo(() => R.map(toLabelData, analysis), [analysis])
-    const arrangedLabelData = useMemo(() => arrangeLabelDataPositions(labelData), [labelData])
+    const pointData = useMemo(() => R.map(toPointData, analysis), [analysis])
+    const arrangedPointData = useMemo(() => arrangePointDataPositions(pointData), [pointData])
 
     return <Globe
         globeImageUrl='./images/earth-blue-marble.jpg'
         backgroundImageUrl='./images/night-sky.png'
 
-        labelsData={arrangedLabelData}
-        labelLabel={'label'}
-        labelSize={'size'}
-        labelDotRadius={'radius'}
-        labelColor={'color'}
-        labelsTransitionDuration={0}
-        labelAltitude={0.0025}
-        onLabelClick={ (label, _event, _coords) => {
-            setSelectedArticles(label.articleCollection.articles)
+        pointsData={arrangedPointData}
+        pointColor={'color'}
+        pointAltitude={0.0025}
+        pointRadius={'radius'}
+        pointResolution={100}
+        pointsTransitionDuration={0}
+        onPointClick={ (point, _event, _coords) => {
+            setSelectedArticles(point.articleCollection.articles)
         }}
     />
 }
